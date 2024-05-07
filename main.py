@@ -6,7 +6,7 @@ os.system('cls')
 meubd = mysql.connector.connect(
     host='localhost',
     user='root',
-    passwd='34271573',
+    passwd='********',
     database=''
 )
 
