@@ -1,43 +1,34 @@
-import mysql.connector
-import os
+import csv
+import uuid
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
 
-os.system('cls')
+# Connect to the Cassandra database
+auth_provider = PlainTextAuthProvider(username='your_username', password='your_password')
+cluster = Cluster(['127.0.0.1'], auth_provider=auth_provider)
+session = cluster.connect()
 
-meubd = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    passwd='********',
-    database=''
-)
+# Create a keyspace and table in the Cassandra database
+session.execute("CREATE KEYSPACE IF NOT EXISTS kaggle_data WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};")
+session.set_keyspace('kaggle_data')
+session.execute("CREATE TABLE IF NOT EXISTS data (id UUID PRIMARY KEY, column1 text, column2 int);")
 
-cursor = meubd.cursor()
-cursor.execute("SHOW DATABASES LIKE'crud'")
+# Read data from a .csv file and insert it into the Cassandra database
+with open('IMDb_Top_2000_Movies.csv', 'r') as csvfile:
+    csv_reader = csv.DictReader(csvfile)
+    for row in csv_reader:
+        session.execute("INSERT INTO data (id, column1, column2) VALUES (%s, %s, %s);", (uuid.uuid4(), row['column1'], row['column2']))
 
-resultadoDB = cursor.fetchone()
+# Update data in the Cassandra database
+session.execute("UPDATE data SET column1 = 'updated_value' WHERE id = your_uuid;")
 
-if resultadoDB:
-    print(("O Banco de Dados já existe."))
-else:
-    print("Criando Banco de Dados...")
-    cursor.execute("CREATE DATABASE crud")
+# Read data from the Cassandra database
+rows = session.execute("SELECT * FROM data;")
+for row in rows:
+    print(row)
 
-    print("Banco de Dados criado com sucesso!")
+# Delete data from the Cassandra database
+session.execute("DELETE FROM data WHERE id = your_uuid;")
 
-cursor.execute("USE crud")
-cursor.execute("SHOW TABLES LIKE'clientes'")
-
-resultadoTable = cursor.fetchone()
-
-if resultadoTable:
-    print(("\nA Tabela já existe."))
-else:
-    print("\nCriando Tabela...")
-    cursor.execute("CREATE TABLE clientes(id INT AUTO_INCREMENT PRIMARY KEY, nome VARCHAR(255), email VARCHAR(255))")
-    print("Tabela criada com sucesso!")
-
-sql = "INSERT INTO clientes (nome, email) VALUES (%s,%s)"
-dados = ("Diego Sawyer", "dhrsawyer@teste.email.com")
-
-cursor.execute(sql, dados)
-meubd.commit()
-print("\nDados inseridos com sucesso!")
+# Close the connection to the Cassandra database
+cluster.shutdown()
