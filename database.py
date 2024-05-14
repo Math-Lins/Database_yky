@@ -24,7 +24,7 @@ with open('imdb_top_2000_movies.csv', 'r', encoding='utf-8') as csvfile:
                 "id": uuid.uuid4(),
                 "Movie_Name": row['Movie Name'],
                 "Release_Year": int(row['Release Year']),
-                "Duration": float(row['Duration']),
+                "Duration": int(row['Duration']),
                 "IMDB_Rating": float(row['IMDB Rating']),
                 "Metascore": float(row['Metascore']),
                 "Votes": int(row['Votes']),
